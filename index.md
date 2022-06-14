@@ -1,37 +1,101 @@
-## Welcome to GitHub Pages
 
-You can use the [editor on GitHub](https://github.com/dddubu/dddubu.github.io/edit/main/index.md) to maintain and preview the content for your website in Markdown files.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+let dataServer;
+let pubKey = "pub-c-c0459111-434c-403a-980e-2eff7fc61d04";
+let subKey = "sub-c-e1f3336e-ce21-49d5-a2da-29da7dcd2741";
+let secretKey = "sec-c-ZTgyOGY0YTktYThjYS00MzBiLWIwNDItMzM2ZjEwNjJkM2Ex";
 
-### Markdown
+let occupancy = 0; 
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+let channelName = "presenceTest";
 
-```markdown
-Syntax highlighted code block
+let allowMessage = false;
 
-# Header 1
-## Header 2
-### Header 3
+  
+function setup() {
 
-- Bulleted
-- List
+    createCanvas(windowWidth, windowHeight);
 
-1. Numbered
-2. List
+    dataServer = new PubNub({
+      subscribeKey: subKey,
+      publishKey: pubKey,
+      uuid: "Your Name Here",
+      secretKey: secretKey,
+      heartbeatInterval: 0,
+    });
 
-**Bold** and _Italic_ and `Code` text
+     // listen for messages coming through the subcription feed on this specific channel. 
 
-[Link](url) and ![Image](src)
-```
+    dataServer.subscribe({ channels: [channelName],   withPresence: true });
+    dataServer.addListener({ message: readIncoming, presence: whoisconnected });
+   
+  
+  }
+  
+function draw() {
+ 
+ // make something visible for more people 
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
 
-### Jekyll Themes
+ if (occupancy > 2) {
+  background(255);
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/dddubu/dddubu.github.io/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
 
-### Support or Contact
+  textSize(20)
+  text("dubu </3 u", windowWidth/2, windowHeight/2);
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+
+  textSize(400)
+  text("</3",300,550);
+
+  allowMessage = false;
+
+ } else if (occupancy > 1) {
+
+  sendTheMessage();
+  allowMessage = true;
+  
+ } else {
+  background(255);
+
+  textSize(20);
+  text("dubu <3 u", windowWidth/2, windowHeight/2); 
+  
+  textSize(400)
+  text("<3",300,550);
+  allowmessage = false;
+
+  }
+}
+  // PubNub logic below
+function sendTheMessage() {
+  // Send Data to the server to draw it in all other canvases
+  dataServer.publish({
+    channel: channelName,
+    message: {
+      x: mouseX,
+      y: mouseY
+    },
+  });
+}
+
+function readIncoming(inMessage) {
+
+  if (allowMessage == true) { // if there is less than 10 people on the page draw circles then show the messages that are sent. 
+ 
+    if (inMessage.channel == channelName) {
+        console.log(inMessage);
+    }
+
+    
+  } 
+}
+
+function whoisconnected(connectionInfo) {
+  console.log(connectionInfo);
+
+  occupancy = connectionInfo.occupancy;
+
+  console.log(occupancy);
+
+}
